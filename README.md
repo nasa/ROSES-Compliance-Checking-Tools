@@ -10,6 +10,14 @@ Code author: Megan Ansdell [@mansdell](https://github.com/mansdell)
 
 [PyMuPDF](https://pymupdf.readthedocs.io/en/latest/): a useful package for importing PDF text (which confusingly is imported as "import fitz")
 
+### Inputs
+
+The code requires two inputs:
+1) Path to the anonymized proposal PDF (PDF_Anon_Path)
+2) Path to a CSV file with the team member first names, last names, instutitions, and cities (Team_Info_Path). An example is provided in this repo.
+
+
+
 # Description
   
 ### check_dapr_single.py
