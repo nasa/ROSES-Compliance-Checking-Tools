@@ -129,30 +129,52 @@ def get_pages(d):
         return [stm_start, stm_end], [ref_start, ref_end], pn
 
 
-def check_dapr_words(doc, info_path, stm_pages, ref_pages):
+def get_team_info(team_info_path):
 
     """
-    PURPOSE:    check for DAPR violation words
+    PURPOSE:    grab team member information
                 (team member names, institutions, cities)
-                (gender pronouns)
+                from either csv file or NSPIRES-generated cover pages
     INPUTS:     doc = fitz Document object
-                info_path = path to file with team member information
-                stm_pages = [start, end] pages of STM section
-                ref_pages = [start, end] pages of references section
-    OUTPUTS:    dww = DAPR violation words that were found
-                dwcc = number of times they were found
-                dwpp = pages of proposal on which they were found
+                team_info_path = path to either CSV and PDR file with team member info
+    OUTPUTS:    names = last names of team members
+                orgs = organizations of team members
+                cities = cities of team members
     """
 
-    ### LOAD TEAM INFO FILE
-    df = pd.read_csv(Team_Info_Path)
+    ### LOAD TEAM INFO IF CVS FILE
+    if Team_Info_Path.split('.')[-1] == 'csv':
 
-    ### GRAB INFO
-    names, orgs, cities = [], [], []
-    for i, val in enumerate(df['First Name']):
-        names.append(df['Last Name'][i])
-        orgs.append(df['Institution'][i])
-        cities.append(df['City'][i])
+        ### LOAD CSV FILE
+        df = pd.read_csv(Team_Info_Path)
+
+        ### GRAB INFO
+        names, orgs, cities = [], [], []
+        for i, val in enumerate(df['First Name']):
+            names.append(df['Last Name'][i])
+            orgs.append(df['Institution'][i])
+            cities.append(df['City'][i])
+
+    ### LOAD TEAM INFO IF PDF FROM NSPIRES
+    ### THIS METHOD WILL NOT COLLECT CITIES
+    if Team_Info_Path.split('.')[-1] == 'pdf':
+
+        ### LOAD PDF
+        doc = fitz.open(Team_Info_Path)
+
+        ### GRAB INFO
+        names, orgs, cities = [], [], []
+        for i, val in enumerate(np.arange(0, doc.pageCount)):
+
+            ### LOAD PAGE TEXT
+            cp = get_text(doc, val)
+
+            ### GRAB ALL TEAM MEMBER NAMES
+            while 'Team Member Name' in cp:
+                cp = cp[cp.index('Team Member Name'):]
+                names.append(((cp[cp.index('Team Member Name'):cp.index('Contact Phone')]).split('\n')[1]).split(' ')[-1])
+                orgs.append(((cp[cp.index('Organization/Business Relationship'):cp.index('Cage Code')]).split('\n')[1]))
+                cp = cp[cp.index('Total Funds Requested'):]
     
     ### CLEAN THINGS UP
     orgs = np.unique(orgs).tolist()
@@ -160,6 +182,26 @@ def check_dapr_words(doc, info_path, stm_pages, ref_pages):
     cities = np.unique(cities).tolist()
     if '' in orgs:
         orgs.remove('')
+
+    return names, orgs, cities
+
+
+def check_dapr_words(doc, names, orgs, cities, stm_pages, ref_pages):
+
+    """
+    PURPOSE:    check for DAPR violation words
+                (team member names, institutions, cities)
+                (gender pronouns)
+    INPUTS:     doc = fitz Document object
+                names = last names of team members
+                orgs = organizations of team members
+                cities = cities of team members
+                stm_pages = [start, end] pages of STM section
+                ref_pages = [start, end] pages of references section
+    OUTPUTS:    dww = DAPR violation words that were found
+                dwcc = number of times they were found
+                dwpp = pages of proposal on which they were found
+    """
 
     ### COMBINE AND ADD GENDER PRONOUNS
     dw = [' she ', ' he ', ' her ', ' his ']
@@ -198,8 +240,9 @@ def check_dapr_words(doc, info_path, stm_pages, ref_pages):
 # ====================== Main Code ========================
 
 ### SET PATHS
-PDF_Anon_Path = './anonproposal.pdf'
-Team_Info_Path = './team_info.csv'
+PDF_Anon_Path = './anonproposal.pdf'  ### PATH TO FULL ANONYMIZED PROPOSAL
+Team_Info_Path = './NSPIRES_Cover_Proposal_Team.pdf'  ### USE THIS IF USING NSPIRES TEAM MEMBER PAGES
+Team_Info_Path = './team_info.csv'  #### USE THIS IF PROVIDING CSV FILE WITH TEAM INFO
 
 ### IDENTIFY STM PAGES AND REF PAGES OF PROPOSAL
 Doc = fitz.open(PDF_Anon_Path)
@@ -208,6 +251,9 @@ STM_Pages, Ref_Pages, Tot_Pages = get_pages(Doc)
 ### CHECK DAPR REFERENCING COMPLIANCE
 N_Brac, N_EtAl = check_ref_type(Doc, STM_Pages[0], STM_Pages[1])
 
+### GRAB TEAM INFO
+Names, Orgs, Cities = get_team_info(Team_Info_Path)
+
 ### CHECK DAPR WORDS COMPLIANCE
-DW, DWC, DWP = check_dapr_words(Doc, Team_Info_Path, STM_Pages, Ref_Pages)
+DW, DWC, DWP = check_dapr_words(Doc, Names, Orgs, Cities, STM_Pages, Ref_Pages)
 
