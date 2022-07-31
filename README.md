@@ -22,7 +22,7 @@ The code requires two inputs:
   
 ### check_dapr_single.py
 
-This code reads in an anonymized proposal submitted to a ROSES program that follows Dual-Anonymouse Peer Reivew (DAPR). It attempts to find the different sections of the proposal (STM, References, Budget) and then checks a variety of things to make sure it is DAPR compliant. It outputs the following:
+This code reads in an anonymized proposal submitted to a ROSES program that follows Dual-Anonymous Peer Reivew (DAPR). It attempts to find the different sections of the proposal (STM, References, Budget) and then checks a variety of things to make sure it is DAPR compliant. It outputs the following:
 
 * Page ranges for the STM and References sections
   - These assume the following order: STM, References, Other (e.g., budget)
