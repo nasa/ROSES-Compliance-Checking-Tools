@@ -57,66 +57,75 @@ def check_ref_type(doc, ps, pe):
     return n_brac, n_etal
         
 
-def get_pages(d):
+def get_pages(d, rps, rpe):
 
     """
     PURPOSE:    identify sections of proposal (STM, references, other)
     INPUTS:     d = fitz Document object
-    OUTPUTS:    stm_start = start page of STM section
-                stm_end = end page of STM section
-                ref_start = start page of references
-                ref_end = end page of references
-                pn = total number of pages
+                rps = start page of references in PDF (int)
+                rpe = end page of references in PDF (int)
+    OUTPUTS:    stm_start = start page of STM section (int)
+                stm_end = end page of STM section (int)
+                ref_start = start page of references (int)
+                ref_end = end page of references (int)
+                pn = total number of pages (int)
     """
 
     ### GET TOTAL NUMBER OF PAGES IN PDF
     pn = d.page_count
 
-    ### LOOP THROUGH PDF PAGES
-    stm_start, stm_end, ref_start, ref_end, ref_end_bu = 0, -100, -100, -100, -100
-    for i, val in enumerate(np.arange(5, pn-1)):
-            
-        ### READ IN TEXT FROM THIS PAGE AND NEXT PAGE
-        t1 = get_text(d, val).replace('\n', '').replace('\t', ' ').replace('   ', ' ').replace('  ', ' ')[0:500]
-        t2 = get_text(d, val + 1).replace('\n', '').replace('\t', ' ').replace('   ', ' ').replace('  ', ' ')[0:500]
-        t1 = t1.lower()
-        t2 = t2.lower()
+    if rps == -99:
 
-        ### FIND START OF STM IF FULL NSPIRES PROPOSAL
-        if ('section x - budget' in t1) & ('section x - budget' not in t2):
-            stm_start = val + 1
-            continue
+        ### LOOP THROUGH PDF PAGES
+        stm_start, stm_end, ref_start, ref_end, ref_end_bu = 0, -100, -100, -100, -100
+        for i, val in enumerate(np.arange(5, pn-1)):
+                
+            ### READ IN TEXT FROM THIS PAGE AND NEXT PAGE
+            t1 = get_text(d, val).replace('\n', '').replace('\t', ' ').replace('   ', ' ').replace('  ', ' ')[0:500]
+            t2 = get_text(d, val + 1).replace('\n', '').replace('\t', ' ').replace('   ', ' ').replace('  ', ' ')[0:500]
+            t1 = t1.lower()
+            t2 = t2.lower()
 
-        ### FIND STM END AND REFERENCES START
-        if (stm_start != -100) & (('reference' in t2) & ('reference' not in t1)) | (('bibliography' in t2) & ('bibliography' not in t1)):
-            stm_end = val
-            ref_start = val + 1
-            
-        ### FIND REF END 
-        # w1, w2, w3, w4, w5, w6, w7 = 'data management', 'budget justification', 'work plan', 'budget narrative', 'work effort', 'total budget'
-        # if (ref_start != -100) & ((w1 in t2) & (w1 not in t1)) | ((w2 in t2) & (w2 not in t1)) | ((w3 in t2) & (w3 not in t1)) | ((w4 in t2) & (w4 not in t1)) | ((w5 in t2) & (w5 not in t1)) | ((w6 in t2) & (w6 not in t1)):
-        w1, w2, w3, w4 = 'budget justification', 'budget narrative', 'total budget', 'table of work effort'
-        if (ref_start != -100) & ((w1 in t2) & (w1 not in t1)) | ((w2 in t2) & (w2 not in t1)) | ((w3 in t2) & (w3 not in t1)) | ((w4 in t2) & (w4 not in t1)):
-            ref_end = val
-            if (ref_start != -100) & (ref_end > ref_start) & (stm_end - stm_start > 10):
-                break
-    
-    ### FIX SOME THINGS BASED ON COMMON SENSE
-    if ref_end < ref_start:
-        ### USE SIMPLE "BUDGET" FLAG IF WE HAVE TO
-        ref_end = ref_end_bu
+            ### FIND START OF STM IF FULL NSPIRES PROPOSAL
+            if ('section x - budget' in t1) & ('section x - budget' not in t2):
+                stm_start = val + 1
+                continue
+
+            ### FIND STM END AND REFERENCES START
+            if (stm_start != -100) & (('reference' in t2) & ('reference' not in t1)) | (('bibliography' in t2) & ('bibliography' not in t1)):
+                stm_end = val
+                ref_start = val + 1
+                
+            ### FIND REF END 
+            # w1, w2, w3, w4, w5, w6, w7 = 'data management', 'budget justification', 'work plan', 'budget narrative', 'work effort', 'total budget'
+            # if (ref_start != -100) & ((w1 in t2) & (w1 not in t1)) | ((w2 in t2) & (w2 not in t1)) | ((w3 in t2) & (w3 not in t1)) | ((w4 in t2) & (w4 not in t1)) | ((w5 in t2) & (w5 not in t1)) | ((w6 in t2) & (w6 not in t1)):
+            w1, w2, w3, w4 = 'budget justification', 'budget narrative', 'total budget', 'table of work effort'
+            if (ref_start != -100) & ((w1 in t2) & (w1 not in t1)) | ((w2 in t2) & (w2 not in t1)) | ((w3 in t2) & (w3 not in t1)) | ((w4 in t2) & (w4 not in t1)):
+                ref_end = val
+                if (ref_start != -100) & (ref_end > ref_start) & (stm_end - stm_start > 10):
+                    break
+        
+        ### FIX SOME THINGS BASED ON COMMON SENSE
         if ref_end < ref_start:
-            ref_end = -100
-    if stm_end - stm_start <= 5:
-        ### IF STM SECTION REALLY SHORT, ASSUME PTOT PAGES 
-        ptot = 15
-        stm_end = np.min([stm_start+ptot-1, pn])
-    if (ref_end != -100) & (ref_start == -100) & (stm_end != -100):
-        ### IF FOUND END BUT NOT START OF REFERENCES, ASSUME REFS START RIGHT AFTER STM
-        ref_start = stm_end + 1
-    if ref_end == -100:
-        ### IF COULDN'T FIND REF END, ASSUME GOES TO END OF PDF (SOMETIMES THIS IS TRUE) 
-        ref_end = pn-1
+            ### USE SIMPLE "BUDGET" FLAG IF WE HAVE TO
+            ref_end = ref_end_bu
+            if ref_end < ref_start:
+                ref_end = -100
+        if stm_end - stm_start <= 5:
+            ### IF STM SECTION REALLY SHORT, ASSUME PTOT PAGES 
+            ptot = 15
+            stm_end = np.min([stm_start+ptot-1, pn])
+        if (ref_end != -100) & (ref_start == -100) & (stm_end != -100):
+            ### IF FOUND END BUT NOT START OF REFERENCES, ASSUME REFS START RIGHT AFTER STM
+            ref_start = stm_end + 1
+        if ref_end == -100:
+            ### IF COULDN'T FIND REF END, ASSUME GOES TO END OF PDF (SOMETIMES THIS IS TRUE) 
+            ref_end = pn-1
+
+    else:
+
+        stm_start, stm_end = 0, rps - 2
+        ref_start, ref_end = rps - 1, rpe - 1
 
     ### IF PROPOSAL INCOMPLETE (E.G., WITHDRAWN) RETURN NOTHING
     if pn - stm_start < 3:
@@ -137,7 +146,8 @@ def get_team_info(team_info_path):
                 (team member names, institutions, cities)
                 from either csv file or NSPIRES-generated cover pages
     INPUTS:     doc = fitz Document object
-                team_info_path = path to either CSV and PDR file with team member info
+                team_info_path = path to CSV file with team member info OR
+                                 NSPIRES-generated PDF with team member info in front matter
     OUTPUTS:    names = last names of team members
                 orgs = organizations of team members
                 cities = cities of team members
@@ -147,7 +157,7 @@ def get_team_info(team_info_path):
     if team_info_path.split('.')[-1] == 'csv':
 
         ### LOAD CSV FILE
-        df = pd.read_csv(Team_Info_Path)
+        df = pd.read_csv(team_info_path)
 
         ### GRAB INFO
         names, orgs, cities = [], [], []
@@ -168,14 +178,14 @@ def get_team_info(team_info_path):
         for i, val in enumerate(np.arange(0, doc.page_count)):
 
             ### LOAD PAGE TEXT
-            cp = get_text(doc, val)
+            cp = (get_text(doc, val)).lower()
 
             ### GRAB ALL TEAM MEMBER NAMES
-            while 'Team Member Name' in cp:
-                cp = cp[cp.index('Team Member Name'):]
-                names.append(((cp[cp.index('Team Member Name'):cp.index('Contact Phone')]).split('\n')[1]).split(' ')[-1])
-                orgs.append(((cp[cp.index('Organization/Business Relationship'):cp.index('CAGE Code')]).split('\n')[1]))
-                cp = cp[cp.index('Total Funds Requested'):]
+            while 'team member name' in cp:
+                cp = cp[cp.index('team member name'):]
+                names.append(((cp[cp.index('team member name'):cp.index('contact phone')]).split('\n')[1]).split(' ')[-1])
+                orgs.append(((cp[cp.index('organization/business relationship'):cp.index('cage code')]).split('\n')[1]))
+                cp = cp[cp.index('total funds requested'):]
 
     
     ### CLEAN THINGS UP
@@ -245,11 +255,13 @@ def check_dapr_words(doc, names, orgs, cities, stm_pages, ref_pages):
 parser = argparse.ArgumentParser()
 parser.add_argument("PDF_Anon_Path", type=str, help="path to anonymized proposal PDF")
 parser.add_argument("Team_Info_Path", type=str, help="path to team info (NSPIRES cover pages or .csv file)")
+parser.add_argument('RefPgStart', nargs='?', default=-99, type=int, help="start page of references in PDF; optional")
+parser.add_argument('RefPgEnd', nargs='?', default=-99, type=int, help="end page of references in PDF; optional")
 args = parser.parse_args()
 
 ### IDENTIFY STM PAGES AND REF PAGES OF PROPOSAL
 Doc = fitz.open(args.PDF_Anon_Path)
-STM_Pages, Ref_Pages, Tot_Pages = get_pages(Doc)
+STM_Pages, Ref_Pages, Tot_Pages = get_pages(Doc, args.RefPgStart, args.RefPgEnd)
 
 ### CHECK DAPR REFERENCING COMPLIANCE
 N_Brac, N_EtAl = check_ref_type(Doc, STM_Pages[0], STM_Pages[1])

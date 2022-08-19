@@ -39,7 +39,7 @@ def get_text(d, pn):
     return t
 
 
-def get_pages(d, pl=15):
+def get_pages(d, flg, pl=15):
 
     """
     PURPOSE:   find start and end pages of proposal within NSPIRES-formatted PDF
@@ -59,35 +59,41 @@ def get_pages(d, pl=15):
     check_words = ["contents", "c o n t e n t s", "budget", "cost", "costs",
                    "submitted to", "purposely left blank", "restrictive notice"]
 
-    ### LOOP THROUGH PDF PAGES
+    ### IF NO NSPIRES FRONT MATTER, SET START/END PAGES
     ps = 0
-    for i, val in enumerate(np.arange(pn)):
-            
-        ### READ IN TEXT FROM THIS PAGE AND NEXT PAGE
-        t1 = get_text(d, val)
-        t2 = get_text(d, val + 1)
-        
-        ### FIND PROPOSAL START USING END OF SECTION X IN NSPIRES
-        if ('SECTION X - Budget' in t1) & ('SECTION X - Budget' not in t2):
+    if flg == 'Yes':
+        pe  = ps + (pl - 1) 
+    
+    else:
 
-            ### SET START PAGE
-            ps = val + 1
+        ### LOOP THROUGH PDF PAGES TO FIND START/END PAGES
+        for i, val in enumerate(np.arange(pn)):
+                
+            ### READ IN TEXT FROM THIS PAGE AND NEXT PAGE
+            t1 = get_text(d, val)
+            t2 = get_text(d, val + 1)
 
-            ### ATTEMPT TO CORRECT FOR (ASSUMED-TO-BE SHORT) COVER PAGES
-            if len(t2) < 500:
-                ps += 1
-                t2 = get_text(d, val + 2)
+            ### FIND PROPOSAL START USING END OF SECTION X IN NSPIRES
+            if ('SECTION X - Budget' in t1) & ('SECTION X - Budget' not in t2):
 
-            ### ATTEMP TO ACCOUNT FOR TOC OR EXTRA SUMMARIES
-            if any([x in t2.lower() for x in check_words]):
-                ps += 1
+                ### SET START PAGE
+                ps = val + 1
 
-            ### SET END PAGE ASSUMING AUTHORS USED FULL PAGE LIMIT
-            pe  = ps + (pl - 1) 
-                        
-        ### EXIT LOOP IF START PAGE FOUND
-        if ps != 0:
-            break 
+                ### ATTEMPT TO CORRECT FOR (ASSUMED-TO-BE SHORT) COVER PAGES
+                if len(t2) < 500:
+                    ps += 1
+                    t2 = get_text(d, val + 2)
+
+                ### ATTEMP TO ACCOUNT FOR TOC OR EXTRA SUMMARIES
+                if any([x in t2.lower() for x in check_words]):
+                    ps += 1
+
+                ### SET END PAGE ASSUMING AUTHORS USED FULL PAGE LIMIT
+                pe  = ps + (pl - 1) 
+                            
+            ### EXIT LOOP IF START PAGE FOUND
+            if ps != 0:
+                break 
 
     ### ATTEMPT TO CORRECT FOR TOC > 1 PAGE OR SUMMARIES THAT WEREN'T CAUGHT ABOVE
     if any([x in get_text(d, ps).lower() for x in check_words]):
@@ -166,16 +172,20 @@ def get_proposal_info(doc):
     """
 
     ### GET COVER PAGE
-    cp = get_text(doc, 0)
+    cp = (get_text(doc, 0)).lower()
 
-    ### GET PI NAME
-    pi_name = ((cp[cp.index('Principal Investigator'):cp.index('E-mail Address')]).split('\n')[1]).split(' ')
+    ### TRY TO GET PI NAME
+    ### WILL RETURN NOTHING IF NOT FULL NSPIRES PROPOSAL
+    try:
+        pi_name = ((cp[cp.index('principal investigator'):cp.index('e-mail address')]).split('\n')[1]).split(' ')
+    except ValueError:
+        return '', '', 'NO NSPIRES FRONT MATTER FOUND', 'Yes'
+
+    ### OTHERWISE CONTINUE GETTING PROPOSAL INFO
     pi_first, pi_last = pi_name[0], pi_name[-1]
+    pn = ((cp[cp.index('proposal number'):cp.index('nasa procedure for')]).split('\n')[1]).split(' ')[0]
 
-    ### GET PROPOSAL NUMBER
-    pn = ((cp[cp.index('Proposal Number'):cp.index('NASA PROCEDURE FOR')]).split('\n')[1]).split(' ')[0]
-
-    return pi_first, pi_last, pn
+    return pi_first, pi_last, pn, 'N/A'
 
 
 def check_compliance(doc, ps, pe):
@@ -262,19 +272,19 @@ def check_compliance(doc, ps, pe):
 
 ### PATH TO FULL ANONYMIZED PROPOSAL
 parser = argparse.ArgumentParser()
-parser.add_argument("PDF_Full_Path", type=str, help="path to full NSPIRES-generated proposal PDF")
+parser.add_argument("PDF_Full_Path", type=str, help="path to full proposal PDF")
 args = parser.parse_args()
 
 ### IDENTIFY STM PAGES AND REF PAGES OF PROPOSAL
 Doc = fitz.open(args.PDF_Full_Path)
-PI_First, PI_Last, Prop_Nb = get_proposal_info(Doc)
+PI_First, PI_Last, Prop_Nb, Flg = get_proposal_info(Doc)
 print(f'\n\t{Prop_Nb}\t{PI_Last}')
 
 ### GET PAGES OF S/T/M PROPOSAL
 try:
-    Page_Num, Page_Start, Page_End = get_pages(Doc)         
+    Page_Num, Page_Start, Page_End = get_pages(Doc, Flg)         
 except RuntimeError:
-    print("\tCould not read PDF, did not save")
+    print("\tCould not read PDF")
 
 ### PRINT SOME TEXT TO CHECK
 print("\n\tSample of first page:\t" + textwrap.shorten((get_text(Doc, Page_Start)[300:400]), 60))
