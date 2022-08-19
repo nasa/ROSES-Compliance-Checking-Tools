@@ -52,7 +52,7 @@ def get_pages(d, pl=15):
     """
 
     ### GET TOTAL NUMBER OF PAGES IN PDF
-    pn = d.pageCount
+    pn = d.page_count
 
     ### WORDS THAT INDICATE EXTRA STUFF BEFORE PROPOSAL STARTS
     check_words = ["contents", "c o n t e n t s", "budget", "cost", "costs",

@@ -69,7 +69,7 @@ def get_pages(d):
     """
 
     ### GET TOTAL NUMBER OF PAGES IN PDF
-    pn = d.pageCount
+    pn = d.page_count
 
     ### LOOP THROUGH PDF PAGES
     stm_start, stm_end, ref_start, ref_end, ref_end_bu = 0, -100, -100, -100, -100
@@ -164,7 +164,7 @@ def get_team_info(team_info_path):
 
         ### GRAB INFO
         names, orgs, cities = [], [], []
-        for i, val in enumerate(np.arange(0, doc.pageCount)):
+        for i, val in enumerate(np.arange(0, doc.page_count)):
 
             ### LOAD PAGE TEXT
             cp = get_text(doc, val)
@@ -215,7 +215,7 @@ def check_dapr_words(doc, names, orgs, cities, stm_pages, ref_pages):
         if pd.isnull(ival):
             continue
         pn = []
-        for n, nval in enumerate(np.arange(stm_pages[0], doc.pageCount)):
+        for n, nval in enumerate(np.arange(stm_pages[0], doc.page_count)):
             if (nval >= np.min(ref_pages)) & (nval <= np.max(ref_pages)) & (np.min(ref_pages) > 5):
                 continue
             tp = (get_text(doc, nval)).lower()
@@ -242,7 +242,7 @@ def check_dapr_words(doc, names, orgs, cities, stm_pages, ref_pages):
 ### SET PATHS
 PDF_Anon_Path = './anonproposal.pdf'  ### PATH TO FULL ANONYMIZED PROPOSAL
 Team_Info_Path = './NSPIRES_Cover_Proposal_Team.pdf'  ### USE THIS IF USING NSPIRES TEAM MEMBER PAGES
-Team_Info_Path = './team_info.csv'  #### USE THIS IF PROVIDING CSV FILE WITH TEAM INFO
+# Team_Info_Path = './team_info.csv'  #### USE THIS IF PROVIDING CSV FILE WITH TEAM INFO
 
 ### IDENTIFY STM PAGES AND REF PAGES OF PROPOSAL
 Doc = fitz.open(PDF_Anon_Path)
