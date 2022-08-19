@@ -174,8 +174,9 @@ def get_team_info(team_info_path):
             while 'Team Member Name' in cp:
                 cp = cp[cp.index('Team Member Name'):]
                 names.append(((cp[cp.index('Team Member Name'):cp.index('Contact Phone')]).split('\n')[1]).split(' ')[-1])
-                orgs.append(((cp[cp.index('Organization/Business Relationship'):cp.index('Cage Code')]).split('\n')[1]))
+                orgs.append(((cp[cp.index('Organization/Business Relationship'):cp.index('CAGE Code')]).split('\n')[1]))
                 cp = cp[cp.index('Total Funds Requested'):]
+
     
     ### CLEAN THINGS UP
     orgs = np.unique(orgs).tolist()
