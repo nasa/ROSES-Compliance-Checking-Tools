@@ -74,7 +74,7 @@ def get_pages(d, rps, rpe):
     ### GET TOTAL NUMBER OF PAGES IN PDF
     pn = d.page_count
 
-    if rps == -99:
+    if (rps == -99) & (rpe == -99):
 
         ### LOOP THROUGH PDF PAGES
         stm_start, stm_end, ref_start, ref_end, ref_end_bu = 0, -100, -100, -100, -100
