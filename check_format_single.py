@@ -3,6 +3,7 @@
 import sys, os, glob, pdb
 import numpy as np
 import pandas as pd
+import argparse
 
 import fitz 
 fitz.TOOLS.mupdf_display_errors(False)
@@ -260,10 +261,12 @@ def check_compliance(doc, ps, pe):
 # ====================== Main Code ========================
 
 ### PATH TO FULL ANONYMIZED PROPOSAL
-PDF_Full_Path = 'NSPIRES_Full_Proposal.pdf'
+parser = argparse.ArgumentParser()
+parser.add_argument("PDF_Full_Path", type=str, help="path to full NSPIRES-generated proposal PDF")
+args = parser.parse_args()
 
 ### IDENTIFY STM PAGES AND REF PAGES OF PROPOSAL
-Doc = fitz.open(PDF_Full_Path)
+Doc = fitz.open(args.PDF_Full_Path)
 PI_First, PI_Last, Prop_Nb = get_proposal_info(Doc)
 print(f'\n\t{Prop_Nb}\t{PI_Last}')
 

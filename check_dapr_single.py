@@ -3,6 +3,7 @@
 import sys, os, glob, re, pdb
 import numpy as np
 import pandas as pd
+import argparse
 import fitz 
 fitz.TOOLS.mupdf_display_errors(False)
 
@@ -143,7 +144,7 @@ def get_team_info(team_info_path):
     """
 
     ### LOAD TEAM INFO IF CVS FILE
-    if Team_Info_Path.split('.')[-1] == 'csv':
+    if team_info_path.split('.')[-1] == 'csv':
 
         ### LOAD CSV FILE
         df = pd.read_csv(Team_Info_Path)
@@ -157,10 +158,10 @@ def get_team_info(team_info_path):
 
     ### LOAD TEAM INFO IF PDF FROM NSPIRES
     ### THIS METHOD WILL NOT COLLECT CITIES
-    if Team_Info_Path.split('.')[-1] == 'pdf':
+    if team_info_path.split('.')[-1] == 'pdf':
 
         ### LOAD PDF
-        doc = fitz.open(Team_Info_Path)
+        doc = fitz.open(team_info_path)
 
         ### GRAB INFO
         names, orgs, cities = [], [], []
@@ -239,20 +240,21 @@ def check_dapr_words(doc, names, orgs, cities, stm_pages, ref_pages):
 
 # ====================== Main Code ========================
 
-### SET PATHS
-PDF_Anon_Path = './anonproposal.pdf'  ### PATH TO FULL ANONYMIZED PROPOSAL
-Team_Info_Path = './NSPIRES_Cover_Proposal_Team.pdf'  ### USE THIS IF USING NSPIRES TEAM MEMBER PAGES
-# Team_Info_Path = './team_info.csv'  #### USE THIS IF PROVIDING CSV FILE WITH TEAM INFO
+### GET PATHS
+parser = argparse.ArgumentParser()
+parser.add_argument("PDF_Anon_Path", type=str, help="path to anonymized proposal PDF")
+parser.add_argument("Team_Info_Path", type=str, help="path to team info (NSPIRES cover pages or .csv file)")
+args = parser.parse_args()
 
 ### IDENTIFY STM PAGES AND REF PAGES OF PROPOSAL
-Doc = fitz.open(PDF_Anon_Path)
+Doc = fitz.open(args.PDF_Anon_Path)
 STM_Pages, Ref_Pages, Tot_Pages = get_pages(Doc)
 
 ### CHECK DAPR REFERENCING COMPLIANCE
 N_Brac, N_EtAl = check_ref_type(Doc, STM_Pages[0], STM_Pages[1])
 
 ### GRAB TEAM INFO
-Names, Orgs, Cities = get_team_info(Team_Info_Path)
+Names, Orgs, Cities = get_team_info(args.Team_Info_Path)
 
 ### CHECK DAPR WORDS COMPLIANCE
 DW, DWC, DWP = check_dapr_words(Doc, Names, Orgs, Cities, STM_Pages, Ref_Pages)
