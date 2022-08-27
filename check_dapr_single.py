@@ -50,7 +50,7 @@ def check_ref_type(doc, ps, pe):
 
     ### CHECK FOR DAPR COMPLIANCE FOR REFERENCES
     n_brac = len([i.start() for i in re.finditer(']', tp)])
-    n_etal = len([i.start() for i in re.finditer(r'\bet al\b', tp, re.IGNORECASE)])
+    n_etal = len([i.start() for i in re.finditer(r'\bet al\b', tp)])
     print("\n\t# [] refs:\t", str(n_brac))
     print("\t# et al. refs:\t", str(n_etal), '\n')
 
