@@ -54,7 +54,7 @@ The code outputs the following:
   - Note that if you use the NSPIRES option for inputting team member names, cities are not included as that info is not in the NSPIRES cover pages.
 
 
-### check_proposals.py
+### check_format_single.py
 
 This code reads in proposal (either the anonymized version or the full, non-anonymized NSPIRES-generated PDF) and attempts to find the "Scientific / Technical / Management" section and then checks ROSES formatting requirements (font size, lines-per-inch, characters-per-inch). Please make sure to read the ROSES solicitation and NASA Guidebook for Proposers carefully, as formatting requirements may be different than those flagged below. 
 
