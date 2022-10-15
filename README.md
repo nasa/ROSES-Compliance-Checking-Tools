@@ -63,7 +63,9 @@ The code requires two inputs (in this order):
 1) REQUIRED: Path to directory containing the anonymized proposal PDFs
 2) REQUIRED: Path to directory containing the full, non-anonymized NSPIRES-generated proposal PDFs
 
-Example command line inputs with only required inputs (where you would replace the paths with your own): 
+Note that the CSV option for the team member info is not available for this version.
+
+Example command line inputs (where you would replace the paths with your own): 
 ```
     python check_dapr_multi.py ./proposals_anon ./proposals_full
 ```
