@@ -209,7 +209,7 @@ def check_compliance(doc, ps, pe):
             cpi = [round(len(x)/6.5,2) for x in ln[2:-2]]  ### TRY TO AVOID HEADERS/FOOTERS
             lns, lpi = ln[2:-2], [round(len(ln)/9, 2)]
         else:
-            df = df.append(get_fonts(doc, val), ignore_index=True)
+            df = pd.concat([df, get_fonts(doc, val)], ignore_index=True)
             cpi = cpi + [round(len(x)/6.5,2) for x in ln[2:-2]]
             lns = lns + ln[2:-2]
             lpi.append(round(len(ln)/9, 2))
