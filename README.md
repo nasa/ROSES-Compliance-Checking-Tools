@@ -54,6 +54,23 @@ The code outputs the following:
   - Note that if you use the NSPIRES option for inputting team member names, cities are not included as that info is not in the NSPIRES cover pages.
 
 
+### check_dapr_multi.py
+
+This is a version of check_dapr_single.py that can be used to check multiple proposals at a time.
+
+The code requires two inputs (in this order):
+
+1) REQUIRED: Path to directory containing the anonymized proposal PDFs
+2) REQUIRED: Path to directory containing the full, non-anonymized NSPIRES-generated proposal PDFs
+
+Example command line inputs with only required inputs (where you would replace the paths with your own): 
+```
+    python check_dapr_multi.py ./proposals_anon ./proposals_full
+```
+
+The output is the same as check_dapr_single.py except that it first prints the name of the anonymized PDF being checked and the name of the non-anonymized PDF that is being used for the team info, so that you can make sure the correct files are being compared. If the number of anonymized and non-anonymized PDFs are not equal, the program will quit before doing anything further.
+
+
 ### check_format_single.py
 
 This code reads in proposal (either the anonymized version or the full, non-anonymized NSPIRES-generated PDF) and attempts to find the "Scientific / Technical / Management" section and then checks ROSES formatting requirements (font size, lines-per-inch, characters-per-inch). Please make sure to read the ROSES solicitation and NASA Guidebook for Proposers carefully, as formatting requirements may be different than those flagged below. 
