@@ -249,8 +249,8 @@ parser.add_argument("PDF_Full_Path", type=str, help="path to full proposals PDFs
 args = parser.parse_args()
 
 ### GET PROPOSALS (NEED TO CHECK IF ORDER HOLDS)
-anon_pdfs = glob.glob(args.PDF_Anon_Path+'/*.pdf')
-full_pdfs = glob.glob(args.PDF_Full_Path+'/*.pdf')
+anon_pdfs = np.sort(glob.glob(args.PDF_Anon_Path+'/*.pdf'))
+full_pdfs = np.sort(glob.glob(args.PDF_Full_Path+'/*.pdf'))
 if len(anon_pdfs) != len(full_pdfs):
     print("\n\tNumber of anonymized and full proposals are not equal, exiting program\n")
     exit()
@@ -262,14 +262,14 @@ for i, val in enumerate(anon_pdfs):
     print(f"\tAgainst team in full proposal:\t{full_pdfs[i]}")
 
     ### IDENTIFY STM PAGES AND REF PAGES OF PROPOSAL
-    Doc = fitz.open(anon_pdfs[i])
+    Doc = fitz.open(str(anon_pdfs[i]))
     STM_Pages, Ref_Pages, Tot_Pages = get_pages(Doc, -99, -99)
 
     ### CHECK DAPR REFERENCING COMPLIANCE
     N_Brac, N_EtAl = check_ref_type(Doc, STM_Pages[0], STM_Pages[1])
 
     ### GRAB TEAM INFO
-    Names, Orgs, Cities = get_team_info(full_pdfs[i])
+    Names, Orgs, Cities = get_team_info(str(full_pdfs[i]))
 
     ### CHECK DAPR WORDS COMPLIANCE
     DW, DWC, DWP = check_dapr_words(Doc, Names, Orgs, Cities, STM_Pages, Ref_Pages)
