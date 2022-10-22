@@ -46,7 +46,7 @@ The code outputs the following:
   
 * Reference format
   - DAPR proposals are supposed to use bracketed number references, rather than "et al." references
-  - The code reports the number of brackets found in the proposal and number of "et al." usages in proposal (the former number should be high, the should be zero)
+  - The code reports the number of brackets found in the proposal and number of "et al." usages in proposal (the former number should be high, the latter should be zero)
   
 * Forbidden DAPR words
   - DAPR proposal shouldn't include any identifying team member information (names, institutions, cities, genders)
@@ -75,7 +75,7 @@ The output is the same as check_dapr_single.py except that it first prints the n
 
 ### check_format_single.py
 
-This code reads in proposal (either the anonymized version or the full, non-anonymized NSPIRES-generated PDF) and attempts to find the "Scientific / Technical / Management" section and then checks ROSES formatting requirements (font size, lines-per-inch, characters-per-inch). Please make sure to read the ROSES solicitation and NASA Guidebook for Proposers carefully, as formatting requirements may be different than those flagged below. 
+This code reads in a proposal (either the anonymized version or the full, non-anonymized NSPIRES-generated PDF) and attempts to find the "Scientific / Technical / Management" section and then checks ROSES formatting requirements (font size, lines-per-inch, characters-per-inch). Please make sure to read the ROSES solicitation and NASA Guidebook for Proposers carefully, as formatting requirements may be different than those flagged below. 
 
 The code requires one input, the path to the proposal PDF. Example command line input (where you would replace the paths with your own): 
 ```
