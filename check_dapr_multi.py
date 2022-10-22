@@ -216,37 +216,28 @@ def check_dapr_words(doc, names, orgs, cities, stm_pages, ref_pages):
     """
 
     ### COMBINE AND ADD GENDER PRONOUNS
-    dw = [' she ', ' he ', ' her ', ' his ']
+    dw = ['she', 'he', 'her', 'his', 'him']
     dw = dw + orgs + names + cities
     dw = np.unique(dw).tolist()
 
     ### GET PAGE NUMBERS WHERE DAPR WORDS APPEAR
     ### IGNORES REFERENCE SECTION, IF KNOWN
-    dwp = []
+    dwp, dwc, dww = [], [], []
     for i, ival in enumerate(dw):
         if pd.isnull(ival):
             continue
-        pn = []
         for n, nval in enumerate(np.arange(stm_pages[0], doc.page_count)):
             if (nval >= np.min(ref_pages)) & (nval <= np.max(ref_pages)) & (np.min(ref_pages) > 5):
                 continue
             tp = (get_text(doc, nval)).lower()
-            # if (' ' + ival.lower() + ' ' in tp) | (' ' + ival.lower() + "'" in tp) | (' ' + ival.lower() + "." in tp):
-            if (ival.lower() in tp):
-                pn.append(nval) 
-        dwp.append(pn)
+            wc = len([i.start() for i in re.finditer(r'\b' + re.escape(ival.lower()) + r'\b', tp)])
+            if wc != 0:
+                dwp.append(nval)
+                dwc.append(wc) 
+                dww.append(ival)
+                print(f'\t"{ival}" found {wc} times on pages {nval+1}')
 
-    ### RECORD NUMBER OF TIMES EACH WORD FOUND AND UNIQUE PAGE NUMBERS
-    ### PRINT FINDINGS TO SCREEN
-    dww, dwcc, dwpp = [], [], []
-    for m, mval in enumerate(dwp):
-        if len(mval) > 0:
-             print(f'\t"{dw[m]}" found {len(mval)} times on pages {np.unique(mval)+1}')
-             dww.append(dw[m])
-             dwcc.append(len(mval))
-             dwpp.append((np.unique(mval)+1).tolist())
-
-    return dww, dwcc, dwpp
+    return dww, dwc, dwp
 
 
 # ====================== Main Code ========================
