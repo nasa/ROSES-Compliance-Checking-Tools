@@ -216,7 +216,7 @@ def check_dapr_words(doc, names, orgs, cities, stm_pages, ref_pages):
     """
 
     ### COMBINE AND ADD GENDER PRONOUNS
-    dw = ['she', 'he', 'her', 'his', 'him']
+    dw = ['she', 'he', 'her', 'hers', 'his', 'him']
     dw = dw + orgs + names + cities
     dw = np.unique(dw).tolist()
 
