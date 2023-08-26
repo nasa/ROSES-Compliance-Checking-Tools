@@ -49,12 +49,38 @@ def check_ref_type(doc, ps, pe):
     tp = tp.lower()
 
     ### CHECK FOR DAPR COMPLIANCE FOR REFERENCES
-    n_brac = len([i.start() for i in re.finditer(']', tp)])
-    n_etal = len([i.start() for i in re.finditer(r'\bet al\b', tp)])
-    print("\n\t# [] refs:\t", str(n_brac))
-    print("\t# et al. refs:\t", str(n_etal), '\n')
 
-    return n_brac, n_etal
+    ### GET NUMBER OF BRACKETED REFERENCES
+    n_brac = 0
+    i_brac = [i.start() for i in re.finditer(']', tp)]
+    for i, val in enumerate(i_brac):
+        if tp[val-1].isnumeric():
+            n_brac += 1
+
+    ### ALSO GET NUMBER OF POSSIBLE PARENTHETICAL REFERENCES
+    ### MATCHES REQUIRE NUMBER WITHIN PARENTHASES < 200 (ASSUMES <200 REFS; HELPS CATCH YEARS IN PARENTHESIS)
+    n_para = 0
+    para_vals = [x for x in re.findall('\(([^)]+)', tp) if x.isnumeric()]
+    for i, val in enumerate(para_vals):
+        if int(val) < 200:
+            n_para += 1
+
+    ### CHECK FOR NUMBER OF ET AL REFERENCES
+    n_etal = len([i.start() for i in re.finditer(r'\bet al\b', tp)])
+
+    ### PRINT TO SCREEN
+    if n_brac < 10:
+        print("\n\t# [] refs:\t", str(n_brac))
+        if n_para > 20:
+            print("\tUsed () instead of []? # () refs:\t", str(n_para))
+    else:
+        print("\n\t# [] refs:\t", str(n_brac))
+    if n_etal > 10:
+        print("\t# et al. refs:\t", str(n_etal), '\n')
+    else:
+        print("\t# et al. refs:\t", str(n_etal), '\n')
+
+    return n_brac, n_etal, n_para
         
 
 def get_pages(d, rps, rpe):
@@ -212,12 +238,12 @@ def check_dapr_words(doc, names, orgs, cities, stm_pages, ref_pages):
                 ref_pages = [start, end] pages of references section
     OUTPUTS:    dww = DAPR violation words that were found
                 dwcc = number of times they were found
-                dwpp = pages of proposal on which they were found
+                dwp = pages of proposal on which they were found
     """
 
     ### COMBINE AND ADD GENDER PRONOUNS
-    dw = ['she', 'he', 'her', 'hers', 'his', 'him']
-    dw = dw + orgs + names + cities
+    dw_gp = ['she', 'he', 'her', 'hers', 'his', 'him']
+    dw = dw_gp + orgs + names + cities
     dw = np.unique(dw).tolist()
 
     ### GET PAGE NUMBERS WHERE DAPR WORDS APPEAR
@@ -227,15 +253,33 @@ def check_dapr_words(doc, names, orgs, cities, stm_pages, ref_pages):
         if pd.isnull(ival):
             continue
         for n, nval in enumerate(np.arange(stm_pages[0], doc.page_count)):
+
             if (nval >= np.min(ref_pages)) & (nval <= np.max(ref_pages)) & (np.min(ref_pages) > 5):
                 continue
             tp = (get_text(doc, nval)).lower()
-            wc = len([i.start() for i in re.finditer(r'\b' + re.escape(ival.lower()) + r'\b', tp)])
-            if wc != 0:
-                dwp.append(nval)
-                dwc.append(wc) 
-                dww.append(ival)
-                print(f'\t"{ival}" found {wc} times on pages {nval+1}')
+            wi = [[i.start(), i.end()] for i in re.finditer(r'\b' + re.escape(ival.lower()) + r'\b', tp)]
+
+            for m, mval in enumerate(wi):
+                ### CHECK IF GENDER PRONOUN CATCHES ARE ACTUALLY HE/SHE, HIM/HER, ETC.
+                ### ONLY SAVE DW INFO IF NOT
+                if ival in dw_gp:
+                    if not (tp[mval[0]-1] == '/') | (tp[mval[1]] == '/'):
+
+                        ### ONLY SAVE FLAGS FOR FIRST OCCURENCE ON PAGE
+                        if m == 0:
+                            dwp.append(nval)
+                            dwc.append(len(wi)) 
+                            dww.append(ival)
+                            print(f'\t"{ival}" found {len(wi)} times on pages {nval+1}')
+
+                else:
+
+                    ### ONLY SAVE FLAGS FOR FIRST OCCURENCE ON PAGE
+                    if m == 0:
+                        dwp.append(nval)
+                        dwc.append(len(wi)) 
+                        dww.append(ival)      
+                        print(f'\t"{ival}" found {len(wi)} times on pages {nval+1}')
 
     return dww, dwc, dwp
 
@@ -251,6 +295,7 @@ args = parser.parse_args()
 ### GET PROPOSALS (NEED TO CHECK IF ORDER HOLDS)
 anon_pdfs = np.sort(glob.glob(args.PDF_Anon_Path+'/*.pdf'))
 full_pdfs = np.sort(glob.glob(args.PDF_Full_Path+'/*.pdf'))
+
 if len(anon_pdfs) != len(full_pdfs):
     print("\n\tNumber of anonymized and full proposals are not equal, exiting program\n")
     exit()
@@ -266,7 +311,7 @@ for i, val in enumerate(anon_pdfs):
     STM_Pages, Ref_Pages, Tot_Pages = get_pages(Doc, -99, -99)
 
     ### CHECK DAPR REFERENCING COMPLIANCE
-    N_Brac, N_EtAl = check_ref_type(Doc, STM_Pages[0], STM_Pages[1])
+    N_Brac, N_EtAl, N_Para = check_ref_type(Doc, STM_Pages[0], STM_Pages[1])
 
     ### GRAB TEAM INFO
     Names, Orgs, Cities = get_team_info(str(full_pdfs[i]))
