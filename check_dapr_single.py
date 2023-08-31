@@ -59,9 +59,14 @@ def check_ref_type(doc, ps, pe):
 
     ### ALSO GET NUMBER OF POSSIBLE PARENTHETICAL REFERENCES
     ### MATCHES REQUIRE NUMBER WITHIN PARENTHASES < 200 (ASSUMES <200 REFS; HELPS CATCH YEARS IN PARENTHESIS)
+    ### ValueError CATCHES SPECIAL CHARACTES THAT AREN'T ACTUALLY NUMBERS
     n_para = 0
     para_vals = [x for x in re.findall('\(([^)]+)', tp) if x.isnumeric()]
     for i, val in enumerate(para_vals):
+        try:
+            int(val)
+        except ValueError:
+            continue
         if int(val) < 200:
             n_para += 1
 
