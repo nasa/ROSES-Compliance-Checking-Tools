@@ -27,14 +27,14 @@ The code requires two inputs (in this order) and can take two additional optiona
 
 Example command line inputs with only required inputs (where you would replace the paths with your own): 
 ```
-    python check_dapr_single.py ./anonproposal.pdf ./NSPIRES_Full_Proposal.pdf
-    python check_dapr_single.py ./anonproposal.pdf ./team_info.csv
+    python check_dapr_single.py "./anonproposal.pdf" "./NSPIRES_Full_Proposal.pdf"
+    python check_dapr_single.py "./anonproposal.pdf" "./team_info.csv"
 ```
 
 Example command line with optional inputs for start and end pages of references section: 
 ```
-    python check_dapr_single.py ./anonproposal.pdf ./NSPIRES_Full_Proposal.pdf 17 21
-    python check_dapr_single.py ./anonproposal.pdf ./team_info.csv 17 21
+    python check_dapr_single.py "./anonproposal.pdf" "./NSPIRES_Full_Proposal.pdf" 17 21
+    python check_dapr_single.py "./anonproposal.pdf" "./team_info.csv" 17 21
 ```
 
 The code outputs the following:
