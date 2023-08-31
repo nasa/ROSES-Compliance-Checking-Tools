@@ -14,8 +14,10 @@ def get_text(d, pn):
              
     """
     PURPOSE:    get the text from a given page of the proposal
+
     INPUTS:     d = fitz Document object
                 pn = page number of text to grab
+
     OUTPUTS:    t = page text
     """
 
@@ -35,9 +37,11 @@ def check_ref_type(doc, ps, pe):
 
     """
     PURPOSE:    check if proposal uses bracketed references rather than "et al." references
+
     INPUTS:     doc = fitz Document object
                 ps = start page of STM section
                 pe = end page of STM section
+
     OUTPUTS:    n_brac = number bracketed references used
                 n_etal = number  "et al." references used
     """
@@ -92,9 +96,11 @@ def get_pages(d, rps, rpe):
 
     """
     PURPOSE:    identify sections of proposal (STM, references, other)
+
     INPUTS:     d = fitz Document object
                 rps = start page of references in PDF (int)
                 rpe = end page of references in PDF (int)
+
     OUTPUTS:    stm_start = start page of STM section (int)
                 stm_end = end page of STM section (int)
                 ref_start = start page of references (int)
@@ -176,9 +182,11 @@ def get_team_info(team_info_path):
     PURPOSE:    grab team member information
                 (team member names, institutions, cities)
                 from either csv file or NSPIRES-generated cover pages
+
     INPUTS:     doc = fitz Document object
                 team_info_path = path to CSV file with team member info OR
                                  NSPIRES-generated PDF with team member info in front matter
+
     OUTPUTS:    names = last names of team members
                 orgs = organizations of team members
                 cities = cities of team members
@@ -217,7 +225,6 @@ def get_team_info(team_info_path):
                 names.append(((cp[cp.index('team member name'):cp.index('contact phone')]).split('\n')[1]).split(' ')[-1])
                 orgs.append(((cp[cp.index('organization/business relationship'):cp.index('cage code')]).split('\n')[1]))
                 cp = cp[cp.index('total funds requested'):]
-
     
     ### CLEAN THINGS UP
     orgs = np.unique(orgs).tolist()
@@ -229,18 +236,21 @@ def get_team_info(team_info_path):
     return names, orgs, cities
 
 
-def check_dapr_words(doc, names, orgs, cities, stm_pages, ref_pages):
+def check_dapr_words(doc, names, orgs, cities, stm_pages, ref_pages, pdf_full_path):
 
     """
     PURPOSE:    check for DAPR violation words
                 (team member names, institutions, cities)
                 (gender pronouns)
+
     INPUTS:     doc = fitz Document object
                 names = last names of team members
                 orgs = organizations of team members
                 cities = cities of team members
                 stm_pages = [start, end] pages of STM section
                 ref_pages = [start, end] pages of references section
+                pdf_full_path = path to full pdf with team member info and project summary
+
     OUTPUTS:    dww = DAPR violation words that were found
                 dwcc = number of times they were found
                 dwp = pages of proposal on which they were found
@@ -251,19 +261,44 @@ def check_dapr_words(doc, names, orgs, cities, stm_pages, ref_pages):
     dw = dw_gp + orgs + names + cities
     dw = np.unique(dw).tolist()
 
+    ### READ IN FULL NSPIRE DOC
+    ### USED FOR SEARCHING PROJECT SUMMARY
+    doc2 = fitz.open(pdf_full_path)
+    pg_arr = np.append(np.arange(stm_pages[0], doc.page_count), np.arange(0, 5))
+
     ### GET PAGE NUMBERS WHERE DAPR WORDS APPEAR
     ### IGNORES REFERENCE SECTION, IF KNOWN
     dwp, dwc, dww = [], [], []
     for i, ival in enumerate(dw):
+
+        ### SKIP IF EMPTY
         if pd.isnull(ival):
             continue
-        for n, nval in enumerate(np.arange(stm_pages[0], doc.page_count)):
 
+        ### LOOP THROUGH PAGES
+        for n, nval in enumerate(pg_arr):
+
+            ### SKIP REFERENCES
             if (nval >= np.min(ref_pages)) & (nval <= np.max(ref_pages)) & (np.min(ref_pages) > 5):
                 continue
+
+            ### READ IN TEXT
             tp = (get_text(doc, nval)).lower()
+
+            ### GET PROJECT SUMMARY FROM FULL NSPIRES PDF
+            pjs = 'on pages'
+            if (n > doc.page_count - 1):
+                if ("SECTION VII - Project Summary" not in get_text(doc2, nval)):
+                    continue
+                if ("SECTION VII - Project Summary" in get_text(doc2, nval)):
+                    pjs = 'in NSPIRES Project Summary on page'
+                    tp = (get_text(doc2, nval)).lower()
+                    tp = tp[tp.index('section vii - project summary'):]
+
+            ### INDEX DAPR WORD
             wi = [[i.start(), i.end()] for i in re.finditer(r'\b' + re.escape(ival.lower()) + r'\b', tp)]
 
+            ### LOOP THROUGH INDEXES
             for m, mval in enumerate(wi):
                 ### CHECK IF GENDER PRONOUN CATCHES ARE ACTUALLY HE/SHE, HIM/HER, ETC.
                 ### ONLY SAVE DW INFO IF NOT
@@ -275,7 +310,7 @@ def check_dapr_words(doc, names, orgs, cities, stm_pages, ref_pages):
                             dwp.append(nval)
                             dwc.append(len(wi)) 
                             dww.append(ival)
-                            print(f'\t"{ival}" found {len(wi)} times on pages {nval+1}')
+                            print(f'\t"{ival}" found {len(wi)} times {pjs} {nval+1}')
 
                 else:
 
@@ -284,7 +319,7 @@ def check_dapr_words(doc, names, orgs, cities, stm_pages, ref_pages):
                         dwp.append(nval)
                         dwc.append(len(wi)) 
                         dww.append(ival)      
-                        print(f'\t"{ival}" found {len(wi)} times on pages {nval+1}')
+                        print(f'\t"{ival}" found {len(wi)} times {pjs} {nval+1}')
 
     return dww, dwc, dwp
 
@@ -322,7 +357,7 @@ for i, val in enumerate(anon_pdfs):
     Names, Orgs, Cities = get_team_info(str(full_pdfs[i]))
 
     ### CHECK DAPR WORDS COMPLIANCE
-    DW, DWC, DWP = check_dapr_words(Doc, Names, Orgs, Cities, STM_Pages, Ref_Pages)
+    DW, DWC, DWP = check_dapr_words(Doc, Names, Orgs, Cities, STM_Pages, Ref_Pages, str(full_pdfs[i]))
     print("\n\n\t==============")
 
 
