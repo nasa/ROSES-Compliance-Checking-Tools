@@ -92,7 +92,7 @@ def check_ref_type(doc, ps, pe):
     return n_brac, n_etal, n_para
         
 
-def get_pages(d, rps, rpe):
+def get_pages(d, rps, rpe, stm_pl=15):
 
     """
     PURPOSE:    identify sections of proposal (STM, references, other)
@@ -100,6 +100,7 @@ def get_pages(d, rps, rpe):
     INPUTS:     d = fitz Document object
                 rps = start page of references in PDF (int)
                 rpe = end page of references in PDF (int)
+                stm_pl = number of pages in STM section (int; default=15)
 
     OUTPUTS:    stm_start = start page of STM section (int)
                 stm_end = end page of STM section (int)
@@ -134,13 +135,14 @@ def get_pages(d, rps, rpe):
                 ref_start = val + 1
                 
             ### FIND REF END 
-            # w1, w2, w3, w4, w5, w6, w7 = 'data management', 'budget justification', 'work plan', 'budget narrative', 'work effort', 'total budget'
-            # if (ref_start != -100) & ((w1 in t2) & (w1 not in t1)) | ((w2 in t2) & (w2 not in t1)) | ((w3 in t2) & (w3 not in t1)) | ((w4 in t2) & (w4 not in t1)) | ((w5 in t2) & (w5 not in t1)) | ((w6 in t2) & (w6 not in t1)):
-            w1, w2, w3, w4 = 'budget justification', 'budget narrative', 'total budget', 'table of work effort'
-            if (ref_start != -100) & ((w1 in t2) & (w1 not in t1)) | ((w2 in t2) & (w2 not in t1)) | ((w3 in t2) & (w3 not in t1)) | ((w4 in t2) & (w4 not in t1)):
+            w1, w2, w3, w4, w5, w6, w7, w8, w9 = 'redacted', 'summary of work effort', 'budget', 'budget narrative', 'total budget', 'table of work effort', 'data management', 'table of personnel', 'inclusion plan'
+            if (ref_start != -100) & ((w1 in t2) & (w1 not in t1)) | ((w2 in t2) & (w2 not in t1)) | ((w3 in t2) & (w3 not in t1)) | ((w4 in t2) & (w4 not in t1)) | ((w5 in t2) & (w5 not in t1)) | ((w6 in t2) & (w6 not in t1)) | ((w7 in t2) & (w7 not in t1)) | ((w8 in t2) & (w8 not in t1)) | ((w9 in t2) & (w9 not in t1)):
                 ref_end = val
-                if (ref_start != -100) & (ref_end > ref_start) & (stm_end - stm_start > 10):
+                if (ref_start != -100) & (ref_end > ref_start) & (stm_end - stm_start > stm_pl-5):
                     break
+            ### FOR WHEN REFERENCES ARE AT VERY END OF DOC
+            if (val == pn - 2) & (ref_start != -100) & ((ref_end == -100) | (ref_end < ref_start)):
+                ref_end = val + 1
         
         ### FIX SOME THINGS BASED ON COMMON SENSE
         if ref_end < ref_start:
