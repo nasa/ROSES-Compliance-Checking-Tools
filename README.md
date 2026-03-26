@@ -96,6 +96,46 @@ The code outputs the following:
   - CPI is calculated per line and the number of pages for which CPI > 16.0 is provided along with snippets of the line text
   - Note that PDF formats are weird and not inherently machine readable, so these calculations are not exact and results should be checked carefully. The limits for LPI and CPI used in the code are purposefully lenient compared to the current ROSES requirements for this reason, thus the code will only report blatant violations (or weird PDF formats that could not be read properly).
  
+### check_roses_compliance.py
+This code is the most up to date version of the ROSES Compliance Checker tool. This version is yet to be released in i-NSPIRES. 
+
+#### New updates:  
+  - Windows compatible
+  - Compatible with different formats of proposal master column names such as proposal number and team member information
+  - Compatible with different formats of institution names  
+  - Removed dependencies of colored word doc text and colored printed statement in terminal output display. 
+
+This code reads in an anonymized proposal submitted to a ROSES program that follows Dual-Anonymous Peer Review (DAPR); can be redacted NSPIRES-generated PDF or just the anonymized proposal PDF. The code attempts to find the different sections of the proposal (STM, DMP, Relevance, Budget) and then checks for DAPR compliance and formatting compliance. The outputs are described below. 
+
+The code requires 3 inputs (in this order) with quotation marks around them: 
+  1) REQUIRED: Path to the anonymized proposal PDFs. This can also be the "redacted" PDFs with NSPIRES front-matter. 
+  2) REQUIRED: Suffix of proposal PDFs (what comes before ".pdf" but after the proposal number) 
+    e.g., for "23-XRP23_2-0003_Redacted.pdf" the suffix would be "_Redacted" 
+  3) REQUIRED: Path to "Proposal Master" report from i-NSPIRES in CSV format (not Excel)  
+
+The code outputs its findings to the terminal as it checks each proposal. When all proposals are checked, the code will also output a final CSV file named “dapr_checks.csv” and an optional text doc of the outputs if to your directory path where all the pdf proposals and their corresponding proposal master file exist. The information includes:
+  
+* Page ranges for proposal sections  
+  - These assume the following order: STM, References, DMP, Relevance, Budget. The code only gives possible STM start and end pages and possible Reference start       and end pages.  
+  - They’re usually correct, but sometimes they’re not; this only really matters for searching for the PI name but avoiding the Reference section  
+  - The value -99 is reported if the page limits could not be found
+    
+* Median font size 
+  - The median font size used in the proposal is calculated, and a warning is given when <=11.8 pt(e.g., for checking compliance)  
+
+* Reference format
+  - DAPR proposals are supposed to use bracketed number references  
+  - Reports numbers of brackets found in proposal and number of “et.al” usages in proposal (the former number should be high, the latter low)  
+  - Also reports number of parenthesis references if over 20 is found. 
+
+* Forbidden DAPR words 
+  - DAPR proposal should not include references to previous work, institutions/departments/universities/cities, PI or Co-I names, etc.  
+  - Reports pronouns (she, he,  her, hers, his, him), team member names, team member institutions and pi cities 
+  - Reports number of times such words are found and page numbers on which they are found 
+
+
+##### Note: Version 2.0.2 
+ 
 # Disclaimer
 
 This is not an official NASA product. 
