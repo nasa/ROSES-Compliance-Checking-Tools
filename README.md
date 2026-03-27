@@ -2,7 +2,8 @@
 
 This directory contains some code to check compliance of proposals submitted to NASA [ROSES](https://science.nasa.gov/researchers/roses-blogs) calls.
 
-Code author: Megan Ansdell [@mansdell](https://github.com/mansdell)
+
+Code Authors: Nazifa Taha [@nazifataha1](https://github.com/nazifataha1) Steven Crawford [@nasacrawford](https://github.com/nasacrawford) Megan Ansdell [@mansdell](https://github.com/mansdell)
 
 # Setup
 
@@ -140,5 +141,5 @@ The code outputs its findings to the terminal as it checks each proposal. When a
 
 This is not an official NASA product. 
 
-Contact Megan Ansdell [@mansdell](https://github.com/mansdell) with questions.
+Contact Nazifa Taha [@nazifataha1](https://github.com/nazifataha1)  with questions.
 
