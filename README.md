@@ -139,7 +139,7 @@ The code outputs its findings to the terminal as it checks each proposal. When a
  
 # Disclaimer
 
-This is not an official NASA product. 
+These tools are provided for informational purposes.  There are no guarantees implied with the usage of these tools.  
 
 Contact Nazifa Taha [@nazifataha1](https://github.com/nazifataha1)  with questions.
 
