@@ -496,13 +496,14 @@ if __name__ == "__main__":
        pval = str(pval)
        Doc = fitz.open(pval)
        STM_Pages, Ref_Pages, Tot_Pages, pFlag = get_pages(Doc, stm_pl=STM_PL)
+      
+       if Tot_Pages == 0:
+         print(f'\n\tProposal incomplete, skipping', file=output)
+         continue
+     
        ### PRINT TO SCREEN (ACCOUNTING FOR ZERO-INDEXING)
        print("\n\tTotal pages = {},  Start page = {},   End page = {}".format(Tot_Pages, STM_Pages[0]+1, STM_Pages[1]+1), file=output)
 
-       
-       if Tot_Pages == 0:
-           print(f'\n\tProposal incomplete, skipping', file=output)
-           continue
 
        ### CHECK FONT SIZE COMPLIANCE 
        Font_Size = get_median_font(Doc, STM_Pages[0], STM_Pages[1], output = output)
@@ -529,10 +530,13 @@ if __name__ == "__main__":
 
 
    # Write out the results
+   current_directory = os.getcwd()
+   folder_name = os.path.basename(current_directory)
+  
    d = {'Prop_Nb': Prop_Nb_All, 'Team Members': TMN_All, 'Font Size': Font_Size_All,
         'N_Brac': N_Brac_All, 'N_EtAl':N_EtAl_All, 'N_Para':N_Para_All,
         'STM_Pages': STM_Pages_All, 'Ref Pages': Ref_Pages_All, 'Flag Pages': pFlag_All,
         'DAPR_Words': DW_All, 'DAPR_Word_Count': DWC_All, 'DAPR_Word_Pages': DWP_All}
 
    df = pd.DataFrame(data=d)
-   df.to_csv('dapr_checks.csv', index=False)
+   df.to_csv(os.path.join(os.path.expanduser(args.PDF_Path), folder_name + '_dapr_checks.csv'), index=False)
